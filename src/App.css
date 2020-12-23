@@ -1,7 +1,11 @@
-
 form {
   margin: auto;
   height: 400px;
   width: 400px;
   padding-top: 100px;
+}
+
+.tittle {
+  text-align: center;
+  margin: auto;
 }
