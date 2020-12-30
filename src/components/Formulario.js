@@ -1,6 +1,9 @@
 import NavBar from "./NavBar";
 import { useState } from "react";
+import { Button } from "react-bootstrap";
+
 const axios = require("axios").default;
+const Cryptojs = require("crypto-js");
 
 export default function Formulario(props) {
   //hook
@@ -14,20 +17,31 @@ export default function Formulario(props) {
     evento.preventDefault();
 
     /*
-            La validación se hace en el backend, 
-            si lanza un correo en el then, significa que el usuario existe
-            de caso contrario, manda un mensaje de error
-    
-            El catch solo está por si ocurre un error muy raro
-            */
-    axios
-      .get("http://localhost:4000/login", {
-        params: {
-          correo: user,
-          password: pass,
-        },
-      })
-      .then((response) => {
+    La validación se hace en el backend, 
+    si lanza un correo en el then, significa que el usuario existe
+    de caso contrario, manda un mensaje de error
+    El catch solo está por si ocurre un error muy raro
+    */
+    //Datos en crudo sin encriptar
+    let rawParams = {
+      correo: user,
+      password: pass,
+    };
+
+    //Se encriptan los datos con algoritmo AES y se le añade la llave maestra
+    let encryptParams = Cryptojs.AES.encrypt(
+      JSON.stringify(rawParams),
+      "5i5t3m45"
+    ).toString();
+
+    //Se hace el post por medio de axios
+    axios({
+      method: "post",
+      url: "http://localhost:4000/login",
+      params: encryptParams,
+    })
+      .then(function (response) {
+        //Si la el login es exitoso, se manda al login principal
         if (response.data.access) {
           props.history.push("/home");
         } else {
@@ -36,18 +50,18 @@ export default function Formulario(props) {
               {response.data.message}
             </div>
           );
+          //Indicador de la respuesta del servidor hacia el usuario
           setIndi(indicadorLogin);
         }
-        //Esta wea deberia de redireccionar
       })
       .catch(function (error) {
-        console.error(error);
+        console.log(error);
       });
   }
 
   return (
     <div>
-      <NavBar tittle="Login" />
+      <NavBar tittle="Iniciar sesion" />
       <form onSubmit={(e) => validar(e)}>
         <div className="mb-3">
           {indicador}
@@ -57,7 +71,7 @@ export default function Formulario(props) {
           </label>
 
           <input
-            type="text"
+            type="email"
             className="form-control"
             id="user"
             onClick={() => setIndi("")}
@@ -82,9 +96,9 @@ export default function Formulario(props) {
             placeholder="password"
           ></input>
           <br />
-          <button type="submit" className="btn btn-outline-dark btn-lg">
+          <Button type="submit" variant="outline-dark">
             Dale
-          </button>
+          </Button>
         </div>
       </form>
     </div>
